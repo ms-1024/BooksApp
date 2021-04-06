@@ -25,19 +25,25 @@
 
   class BookList {
     constructor() {
-      const thisBookList = this;
-      thisBookList.data = dataSource.books;
-      thisBookList.render(thisBookList.determineRatingBgc);
-      thisBookList.initActions(thisBookList.filterBooks);
+      const thisBooksList = this;
+      thisBooksList.data = dataSource.books;
+      thisBooksList.getElements();
+      thisBooksList.render();
+      thisBooksList.initActions();
+    }
+
+    getElements() {
+      const thisBooksList = this;
+
+      thisBooksList.bookWrapper = document.querySelector(select.containerOf.booksList);
+      thisBooksList.booksList = document.querySelector(select.containerOf.booksList);
+      thisBooksList.filterList = document.querySelector(select.containerOf.filters);
     }
 
     determineRatingBgc(rating) {
-      let color1 = '';
-      let color2 = '';
-      if (rating < 6) {
-        color1 = '#fefcea';
-        color2 = '#f1da36';
-      } else if (rating <= 8) {
+      let color1 = '#fefcea';
+      let color2 = '#f1da36';
+      if (rating <= 8) {
         color1 = '#b4df5b';
         color2 = color1;
       } else if (rating <= 9) {
@@ -47,23 +53,24 @@
         color1 = '#ff0084';
         color2 = color1;
       }
-      const background = `linear-gradient(to bottom, ${color1} 0%, ${color2} 100%);`;
-      return background;
+      return `linear-gradient(to bottom, ${color1} 0%, ${color2} 100%);`;
     }
 
-    render(cb) {
-      const bookWrapper = document.querySelector(select.containerOf.booksList);
-      for (const book of dataSource.books) {
-        book.ratingBgc = cb(book.rating);
+    render() {
+      const thisBooksList = this;
+      for (const book of thisBooksList.data) {
+        book.ratingBgc = thisBooksList.determineRatingBgc(book.rating);
         book.ratingWidth = book.rating * 10;
         const generatedHTML = templates.bookTemplate(book);
         const element = utils.createDOMFromHTML(generatedHTML);
-        bookWrapper.appendChild(element);
+        thisBooksList.bookWrapper.appendChild(element);
       }
     }
 
     filterBooks() {
-      for(const book of dataSource.books) {
+      const thisBooksList = this;
+      for(const book of thisBooksList.data) {
+        const hiddenBook = document.querySelector(`.book__image[data-id="${book.id}"]`);
         let shouldBeHidden = false;
         for(const filter of select.containerOf.filtersBooks) {
           if (!book.details[filter]) {
@@ -72,19 +79,17 @@
           }
         }
         if(shouldBeHidden) {
-          const hiddenBook = document.querySelector(`.book__image[data-id="${book.id}"]`);
           hiddenBook.classList.add(select.imageOf.hidden);
+
         } else {
-          const hiddenBook = document.querySelector(`.book__image[data-id="${book.id}"]`);
           hiddenBook.classList.remove(select.imageOf.hidden);
         }
       }
     }
 
-    initActions(cb) {
-      const booksList = document.querySelector(select.containerOf.booksList);
-      const filterList = document.querySelector(select.containerOf.filters);
-      booksList.addEventListener('dblclick', function(e) {
+    initActions() {
+      const thisBooksList = this;
+      thisBooksList.booksList.addEventListener('dblclick', function(e) {
         e.preventDefault();
         const clickedElement = e.target.offsetParent;
         console.log(clickedElement);
@@ -107,7 +112,7 @@
           }
         }
       });
-      filterList.addEventListener('click', function(e) {
+      thisBooksList.filterList.addEventListener('click', function(e) {
         const clickedElement = e.target;
         console.log(clickedElement);
         if(clickedElement.tagName === 'INPUT' && clickedElement.type === 'checkbox' && clickedElement.name === 'filter') {
@@ -115,12 +120,12 @@
           if(clickedElement.checked) {
             select.containerOf.filtersBooks.push(clickedElement.value);
             console.log(select.containerOf.filtersBooks);
-            cb();
+            thisBooksList.filterBooks();
           } else {
             const pos = select.containerOf.filtersBooks.indexOf(clickedElement.value);
             select.containerOf.filtersBooks.splice(pos, 1);
             console.log(select.containerOf.filtersBooks);
-            cb();
+            thisBooksList.filterBooks();
           }
         }
       });
